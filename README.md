@@ -30,3 +30,12 @@ print(textutils.serialise(music.data.meta))
 -- Play the music
 music:play()
 ```
+
+You can play, pause, reset or stop the music as well
+
+```lua
+music:play() -- starts/continues playing
+music:pause() -- pauses playing
+music:reset() -- reset music to play from start
+music:stop() -- pause + reset
+```
