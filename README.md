@@ -1,6 +1,8 @@
 # NBS Tunes for CC
-<img align="right" height="100" src="thumbnail.png.png">
+<img align="right" height="100" src="thumbnail.png">
 Easily parse any version of the Note Block Studio (.nbs) music format in ComputerCraft!
+
+[View on PineStore](https://pinestore.cc/projects/18/nbs-tunes)
 
 Features:
 - can parse each version (0-5) of the .nbs format!
