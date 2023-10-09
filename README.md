@@ -1,4 +1,5 @@
 # NBS Tunes for CC
+<img align="right" height="100" src="thumbnail.png.png">
 Easily parse any version of the Note Block Studio (.nbs) music format in ComputerCraft!
 
 Features:
@@ -39,3 +40,5 @@ music:pause() -- pauses playing
 music:reset() -- reset music to play from start
 music:stop() -- pause + reset
 ```
+
+The example music file is Doritos and Fritos by 100 gecs (and converted to MIDI/NBS by Michiel)
