@@ -1,7 +1,7 @@
 
 local nbsTunes = require("nbsTunes")
 
--- To use custom instruments, you need to map the filename in the .nbs file to a Minecraft sound id for
+-- To use custom instruments, you need to map the filename in the .nbs file to a Minecraft sound id
 -- The example with custom instruments has an exploding creeper sound
 -- nbsTunes.setCustomInstrument("explode1.ogg", "entity.generic.explode")
 -- local music = nbsTunes.load("custom_instruments.nbs")
