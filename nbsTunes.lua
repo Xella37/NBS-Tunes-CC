@@ -9,66 +9,66 @@ local function setCustomInstrument(filename, soundId)
 end
 
 local function parse(path)
-    local file = fs.open(path, "rb")
-    if not file then
-        error("Could not find music file: " .. path)
-    end
+	local file = fs.open(path, "rb")
+	if not file then
+		error("Could not find music file: " .. path)
+	end
 
-    local nbsRaw = file:readAll()
-    nbsRaw = string.gsub(nbsRaw, "\r\n", "\n")
-    file.close()
+	local nbsRaw = file:readAll()
+	nbsRaw = string.gsub(nbsRaw, "\r\n", "\n")
+	file.close()
 
-    local seekPos = 1
+	local seekPos = 1
 
 	local byte = string.byte
 	local blshift = bit.blshift
 
-    local function readInteger()
-        local buffer = nbsRaw:sub(seekPos, seekPos+3)
-        seekPos = seekPos + 4
+	local function readInteger()
+		local buffer = nbsRaw:sub(seekPos, seekPos+3)
+		seekPos = seekPos + 4
 
-        if not buffer or #buffer < 4 then return nil end
+		if not buffer or #buffer < 4 then return nil end
 
-        local byte1 = byte(buffer, 1)
-        local byte2 = byte(buffer, 2)
-        local byte3 = byte(buffer, 3)
-        local byte4 = byte(buffer, 4)
+		local byte1 = byte(buffer, 1)
+		local byte2 = byte(buffer, 2)
+		local byte3 = byte(buffer, 3)
+		local byte4 = byte(buffer, 4)
 
-        return byte1 + blshift(byte2, 8) + blshift(byte3, 16) + blshift(byte4, 24)
-    end
+		return byte1 + blshift(byte2, 8) + blshift(byte3, 16) + blshift(byte4, 24)
+	end
 
-    local function readShort()
-        local buffer = nbsRaw:sub(seekPos, seekPos+1)
-        seekPos = seekPos + 2
+	local function readShort()
+		local buffer = nbsRaw:sub(seekPos, seekPos+1)
+		seekPos = seekPos + 2
 
-        if not buffer or #buffer < 2 then return end
+		if not buffer or #buffer < 2 then return end
 
 		local byte1 = byte(buffer, 1)
 		local byte2 = byte(buffer, 2)
 
-        return byte1 + blshift(byte2, 8)
-    end
+		return byte1 + blshift(byte2, 8)
+	end
 
-    local function readByte()
-        local buffer = nbsRaw:sub(seekPos, seekPos)
-        seekPos = seekPos + 1
+	local function readByte()
+		local buffer = nbsRaw:sub(seekPos, seekPos)
+		seekPos = seekPos + 1
 
-        if not buffer then return end
+		if not buffer then return end
 
-        return byte(buffer, 1)
-    end
+		return byte(buffer, 1)
+	end
 
-    local function readString()
-        local length = readInteger()
-        if length then
-            local txt = nbsRaw:sub(seekPos, seekPos + length - 1)
-            seekPos = seekPos + length
-            return txt
-        end
-    end
+	local function readString()
+		local length = readInteger()
+		if length then
+			local txt = nbsRaw:sub(seekPos, seekPos + length - 1)
+			seekPos = seekPos + length
+			return txt
+		end
+	end
 
-    -- Metadata
-    local song = {}
+	-- Metadata
+	local song = {}
 	song.zeros = readShort() -- new in version 1
 	local legacy = song.zeros ~= 0
 	local version = 0
@@ -85,11 +85,11 @@ local function parse(path)
 			song.length = readShort()
 		end
 	end
-    song.layer_count = readShort() --- called height in legacy
-    song.name = readString()
-    song.author = readString()
-    song.ogauthor = readString()
-    song.desc = readString()
+	song.layer_count = readShort() --- called height in legacy
+	song.name = readString()
+	song.author = readString()
+	song.ogauthor = readString()
+	song.desc = readString()
 	song.tempo = readShort() or 1000
 	song.auto_save = readByte()
 	song.auto_save_duration = readByte()
@@ -108,51 +108,51 @@ local function parse(path)
 
 	-- song.tempo is 100 * the t/s, we compute the delay (or seconds per tick) to use when playing the audio
 	local ticksPerSecond = song.tempo / 100
-    local delay = 1 / ticksPerSecond
+	local delay = 1 / ticksPerSecond
 
-    local ticks = {}
-    local currenttick = -1
+	local ticks = {}
+	local currenttick = -1
 
-    while true do
-        -- We skip by step layers ahead
-        local step = readShort()
+	while true do
+		-- We skip by step layers ahead
+		local step = readShort()
 
-        -- A zero step means we go to the next part (which we don't need so we just ignore that)
-        if step == 0 then
-            break
-        end
+		-- A zero step means we go to the next part (which we don't need so we just ignore that)
+		if step == 0 then
+			break
+		end
 
-        currenttick = currenttick + step
+		currenttick = currenttick + step
 
-        -- lpos is the current layer (in the internal structure, we ignore NBS's editor layers for convenience)
-        local lpos = 1
-        ticks[currenttick] = {}
+		-- lpos is the current layer (in the internal structure, we ignore NBS's editor layers for convenience)
+		local lpos = 1
+		ticks[currenttick] = {}
 
 		local currentLayer = -1
-        while true do
-            -- Check how big the jump from this note to the next one is
-            local jump = readShort()
+		while true do
+			-- Check how big the jump from this note to the next one is
+			local jump = readShort()
 			currentLayer = currentLayer + jump
 
-            -- If its zero, we should go to the next tick
-            if jump == 0 then
-                break
-            end
+			-- If its zero, we should go to the next tick
+			if jump == 0 then
+				break
+			end
 
-            -- But if its not, we read the instrument and note number
+			-- But if its not, we read the instrument and note number
 			local inst = readByte() + 1 -- +1 so it starts at 1
-            local note = readByte()
+			local note = readByte()
 			local velocity, panning, note_block_pitch
 			if not legacy then
 				if version >= 4 then -- note panning, velocity and note block fine pitch added in v4
 					velocity = readByte() / 100
 					panning = readByte() - 100
-		            note_block_pitch = readShort()
+					note_block_pitch = readShort()
 				end
 			end
 
-            -- And add them to the internal structure
-            ticks[currenttick][lpos] = {
+			-- And add them to the internal structure
+			ticks[currenttick][lpos] = {
 				inst = inst,
 				note = note,
 				velocity = velocity or 1,
@@ -160,9 +160,9 @@ local function parse(path)
 				fine_pitch = note_block_pitch,
 				layer = currentLayer+1,
 			}
-            lpos = lpos + 1
-        end
-    end
+			lpos = lpos + 1
+		end
+	end
 
 	-- we now parse the headers
 	local layers = {}
@@ -218,7 +218,7 @@ local function parse(path)
 		end
 	end
 
-    return {
+	return {
 		meta = song,
 		delay = delay,
 		ticks = ticks,
